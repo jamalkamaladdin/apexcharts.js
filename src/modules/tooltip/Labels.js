@@ -272,12 +272,30 @@ export default class Labels {
   }
 
   /**
+   * Index into yLabelFormatters, which holds one formatter per y axis. Old
+   * style configs pair series i with yaxis[i]. With a seriesName array, or
+   * more series than axes, series i is drawn against the axis that
+   * seriesYAxisReverseMap gives, so the tooltip reads that axis's formatter.
+   * @param {number} i
+   */
+  getYAxisIndex(i) {
+    const w = this.w
+    const yaxis = w.config.yaxis
+    const newStyle =
+      w.seriesData.series.length > yaxis.length ||
+      yaxis.some((/** @type {any} */ a) => Array.isArray(a.seriesName))
+    if (!w.globals.axisCharts || !newStyle) return i
+    const axisIndex = w.globals.seriesYAxisReverseMap[i]
+    return typeof axisIndex === 'number' ? axisIndex : i
+  }
+
+  /**
    * @param {number} i
    */
   getFormatters(i) {
     const w = this.w
 
-    let yLbFormatter = w.formatters.yLabelFormatters[i]
+    let yLbFormatter = w.formatters.yLabelFormatters[this.getYAxisIndex(i)]
     let yLbTitleFormatter
 
     if (w.formatters.ttVal !== undefined) {
