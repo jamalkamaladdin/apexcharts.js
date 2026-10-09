@@ -278,13 +278,32 @@ const buildRangeTooltipHTML = (opts) => {
   let { color, seriesName, ylabel, start, end, seriesIndex, dataPointIndex } =
     opts
 
-  const formatter =
-    opts.w.globals.tooltip.tooltipLabels.getFormatters(seriesIndex)
+  const w = opts.w
+  const formatter = w.globals.tooltip.tooltipLabels.getFormatters(seriesIndex)
 
-  start = formatter.yLbFormatter(start)
-  end = formatter.yLbFormatter(end)
+  // Same context the shared tooltip passes in Labels.formatYValue(), so a
+  // tooltip.y.formatter that reads opts.seriesIndex or opts.w works on range
+  // charts too (#4951).
+  start = formatter.yLbFormatter(start, {
+    series: w.rangeData.seriesRangeStart,
+    seriesIndex,
+    dataPointIndex,
+    w,
+  })
+  end = formatter.yLbFormatter(end, {
+    series: w.rangeData.seriesRangeEnd,
+    seriesIndex,
+    dataPointIndex,
+    w,
+  })
   const val = formatter.yLbFormatter(
-    opts.w.seriesData.series[seriesIndex][dataPointIndex],
+    w.seriesData.series[seriesIndex][dataPointIndex],
+    {
+      series: w.seriesData.series,
+      seriesIndex,
+      dataPointIndex,
+      w,
+    },
   )
 
   let valueHTML = ''
