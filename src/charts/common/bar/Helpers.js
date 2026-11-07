@@ -773,7 +773,9 @@ export default class Helpers {
     }
 
     // Center the stroke on the coordinates
-    const strokeCenter = strokeWidth / 2
+    // Reserve half the value span for the fill when the stroke exceeds it.
+    // Otherwise a sub-pixel bar draws back across its baseline.
+    const strokeCenter = Math.min(strokeWidth / 2, Math.abs(v2 - v1) / 4)
     const insetCenter = insetWidth / 2
     const direction = dir * (this.barCtx.isReversed ? -1 : 1)
     // An empty segment (no stroke of its own in a stroked series) collapses
@@ -951,7 +953,7 @@ export default class Helpers {
       const _ctx = this.barCtx.groupCtx
       // (the value's own y, which the layer above stacks on)
       _ctx.yArrj.push(r.tip - strokeCenter * direction)
-      _ctx.yArrjF.push(Math.abs(y1 - y2 + r.strokeWidth * direction))
+      _ctx.yArrjF.push(Math.abs(y1 - y2 + 2 * strokeCenter * direction))
       _ctx.yArrjVal.push(this.barCtx.series[i][j] ?? null)
     }
 
@@ -1242,7 +1244,7 @@ export default class Helpers {
     if (w.config.chart.stacked) {
       const _ctx = this.barCtx.groupCtx
       _ctx.xArrj.push(x2 + strokeCenter * direction)
-      _ctx.xArrjF.push(Math.abs(x1 - x2 - r.strokeWidth * direction))
+      _ctx.xArrjF.push(Math.abs(x1 - x2 - 2 * strokeCenter * direction))
       _ctx.xArrjVal.push(this.barCtx.series[i][j] ?? null)
     }
     return {

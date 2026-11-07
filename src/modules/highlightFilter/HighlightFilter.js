@@ -986,29 +986,12 @@ export default class HighlightFilter {
   }
 
   /**
-   * A part's rect, from the renderer's builder. That builder centres the
-   * whole's stroke on each end, so a bar thinner than its stroke turns inside
-   * out: a stroke-wide sliver past its baseline (a value of 0, a series the
-   * legend hides or shows). The whole's own stroke paints over it; a part has
-   * none, so the sliver would show as solid colour. A part that thin is drawn
-   * as the line it collapses to, at its middle, which is where the rect it
-   * grows into starts.
+   * A part's rect uses the same stroke-limited value axis as its whole. Zero
+   * parts collapse to a line instead of painting a stroke-wide sliver.
    * @param {any} h the bar helpers
    * @param {{a: number, len: number, v1: number, v2: number, strokeWidth: any, realIndex: number, j: number, dir: number, horizontal: boolean}} o
    */
   _rect(h, o) {
-    const sw = Array.isArray(o.strokeWidth)
-      ? o.strokeWidth[o.realIndex]
-      : o.strokeWidth
-    const c = (sw || 0) / 2
-    const d = o.v2 - o.v1
-    if (Math.abs(d) < 2 * c) {
-      const m = o.v1 + d / 2
-      // (barRect insets each end by the half stroke along `direction`)
-      const s =
-        c * o.dir * (h.barCtx.isReversed ? -1 : 1) * (o.horizontal ? -1 : 1)
-      o = { ...o, v1: m + s, v2: m - s }
-    }
     return h.barRect(o)
   }
 

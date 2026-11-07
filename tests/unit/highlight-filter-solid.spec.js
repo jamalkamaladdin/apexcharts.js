@@ -588,11 +588,8 @@ describe("bars: the whole's own stroke rides the part on the whole's shape", () 
   })
 })
 
-// barRect centres the whole's stroke on each end, so a bar thinner than its
-// stroke turns inside out into a stroke-wide sliver past its baseline (a 0, a
-// series the legend hides or brings back). The whole's stroke paints over its
-// own; a part has none, and showed a solid 1px line. A part that thin is the
-// line it collapses to.
+// A zero part has no visible stroke and collapses to a line. The whole may
+// have a stroke, but its value-axis geometry cannot invert a zero part.
 describe('bars: a part of nothing draws nothing', () => {
   const height = (n, axis = 1) => {
     const [a, b] = span(n.getAttribute('d'), axis)
