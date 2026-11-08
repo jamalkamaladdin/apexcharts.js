@@ -855,6 +855,8 @@ export default class ApexCharts {
       // known which labels still need their full text on hover.
       AxesUtils.pruneRedundantLabelTitles(w.dom.baseEl)
 
+      new DataLabels(w).avoidYAxisLabelOverlaps()
+
       me.annotations?.drawAxesAnnotations()
 
       let tools
@@ -1850,6 +1852,7 @@ export default class ApexCharts {
         if (w.config.dataLabels.background.enabled) {
           dataLabels.dataLabelsBackground()
         }
+        dataLabels.avoidYAxisLabelOverlaps()
 
         // Waterfall connectors: the series above were redrawn, so the layer
         // that joins them is stale. drawConnectors replaces it in place.

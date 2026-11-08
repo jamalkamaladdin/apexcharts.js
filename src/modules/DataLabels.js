@@ -714,6 +714,73 @@ class DataLabels {
     }
   }
 
+  /** Keep line labels and their backgrounds clear of rendered y-axis values. */
+  avoidYAxisLabelOverlaps() {
+    const w = this.w
+    if (
+      (w.config.chart.type !== 'line' && w.config.chart.type !== 'area') ||
+      w.globals.isSlopeChart
+    ) return
+
+    // Axes are drawn after the series on a full render. Measure their final
+    // screen boxes here, after mount draws and aligns the axis labels.
+    const axes = Array.from(w.dom.baseEl.querySelectorAll('.apexcharts-yaxis-label'))
+      .map((el) => {
+        const index = Number(el.closest('.apexcharts-yaxis')?.getAttribute('rel'))
+        return {
+          box: el.getBoundingClientRect(),
+          opposite: w.config.yaxis[index]?.opposite,
+        }
+      })
+      .filter(({ box }) => box.width && box.height)
+    if (!axes.length) return
+
+    const labels = w.dom.baseEl.querySelectorAll(
+      '.apexcharts-datalabels text.apexcharts-datalabel',
+    )
+    /** @type {{text: SVGGraphicsElement, background: Element | null, delta: number}[]} */
+    const shifts = []
+    for (let i = 0; i < labels.length; i++) {
+      const el = labels[i]
+      const text = /** @type {SVGGraphicsElement} */ (el)
+      const matrix = text.getScreenCTM?.()
+      if (!matrix?.a || matrix.b || matrix.c) continue
+      const background = el.previousElementSibling?.tagName.toLowerCase() === 'rect'
+        ? el.previousElementSibling
+        : null
+      const box = (background || el).getBoundingClientRect()
+      if (!box.width || !box.height) continue
+
+      let moveRight = 0
+      let moveLeft = 0
+      for (const axis of axes) {
+        const a = axis.box
+        if (box.top >= a.bottom || box.bottom <= a.top ||
+            box.left >= a.right || box.right <= a.left) continue
+        if (axis.opposite) moveLeft = Math.min(moveLeft, a.left - box.right - 2)
+        else moveRight = Math.max(moveRight, a.right - box.left + 2)
+      }
+      // A chart too narrow to clear axes on both sides keeps its placement.
+      if (moveRight && moveLeft) continue
+      const shift = moveRight || moveLeft
+      if (!shift) continue
+      shifts.push({ text, background, delta: shift / matrix.a })
+    }
+    // Batch the reads above; changing x before measuring the next label would
+    // force a new SVG layout for every collision.
+    for (const { text, background, delta } of shifts) {
+      text.setAttribute('x', String(Number(text.getAttribute('x')) + delta))
+      const cx = text.getAttribute('cx')
+      if (cx !== null) text.setAttribute('cx', String(Number(cx) + delta))
+      if (background) {
+        background.setAttribute(
+          'x',
+          String(Number(background.getAttribute('x')) + delta),
+        )
+      }
+    }
+  }
+
   dataLabelsBackground() {
     const w = this.w
 
